@@ -1,11 +1,9 @@
 import { useRouter } from 'next/router';
 import styled, { keyframes, createGlobalStyle } from 'styled-components';
 import Link from 'next/link';
-
 import { useContext, useState, useEffect } from 'react';
 import BarsIcon from './Bars';
 import Center from './Center';
-
 
 // Global style to lock body scroll
 const GlobalStyle = createGlobalStyle`
@@ -27,12 +25,13 @@ const hoverAnimation = keyframes`
 `;
 
 const StyledHeader = styled.header`
-  background-color: #222;
+  background-color: ${(props) => (props.scrolled ? 'rgba(34, 34, 34, 0.8)' : '#222')};
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
+  transition: background-color 0.3s ease;
 `;
 
 const Wrapper = styled.div`
@@ -49,9 +48,10 @@ const Logo = styled(Link)`
   position: relative;
   z-index: 3;
   padding: 10px 0;
-    @media screen and (min-width: 768px) {
+
+  @media screen and (min-width: 768px) {
     padding: 0;
-}
+  }
 
   &:hover {
     animation: ${hoverAnimation} 0.3s ease;
@@ -120,6 +120,7 @@ const NavButton = styled.button`
 
 export default function Header() {
   const [navActive, setNavActive] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const router = useRouter();
 
   // Lock/unlock body scroll based on navActive state
@@ -127,23 +128,33 @@ export default function Header() {
     document.body.classList.toggle('locked', navActive);
   }, [navActive]);
 
+  // Handle scroll event
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 0);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
   return (
     <>
       <GlobalStyle />
-      <StyledHeader>
-        
-          <Wrapper>
-            <Logo href="/">Photo Gallery</Logo>
-            <StyledNav navActive={navActive}>
-              <NavLink href={'/'} isActive={router.pathname === '/'}>
-                Home
-              </NavLink>
-            </StyledNav>
-            <NavButton onClick={() => setNavActive(prev => !prev)}>
-              <BarsIcon />
-            </NavButton>
-          </Wrapper>
-        
+      <StyledHeader scrolled={scrolled}>
+        <Wrapper>
+          <Logo href="/">Photo Gallery</Logo>
+          <StyledNav navActive={navActive}>
+            <NavLink href={'/'} isActive={router.pathname === '/'}>
+              Home
+            </NavLink>
+          </StyledNav>
+          <NavButton onClick={() => setNavActive(prev => !prev)}>
+            <BarsIcon />
+          </NavButton>
+        </Wrapper>
       </StyledHeader>
     </>
   );
